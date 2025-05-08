@@ -7,12 +7,13 @@ This script downloads all your GitHub repositories, analyzes their code using Op
 - Clones all your (non-fork) repositories
 - Analyzes code to suggest relevant topics using GPT-4
 - Updates topics for each repo via the GitHub API
+- **NEW:** Optionally only process public repos or repos without tags (topics)
 
 ## Setup
 
 ### 1. Clone this repository or copy the script files
 
-### 2. Create a `.env` file in the `add-tags` directory:
+### 2. Create a `.env` file in the project directory:
 
 ```
 GITHUB_USERNAME=your_github_username
@@ -26,14 +27,18 @@ OPENAI_API_KEY=your_openai_api_key
 ### 3. Install dependencies
 
 ```bash
-pip install -r add-tags/requirements.txt
+pip install -r requirements.txt
 ```
 
 ### 4. Run the script
 
 ```bash
-python add-tags/auto_tag_github_repos.py
+python auto_tag_github_repos.py [--only-public] [--only-untagged]
 ```
+
+- `--only-public`: Only process public repositories (skip private repos)
+- `--only-untagged`: Only process repositories that have no topics/tags set
+- You can use both flags together to process only public, untagged repos
 
 ## Notes
 - The script skips forked repositories by default.
@@ -41,7 +46,7 @@ python add-tags/auto_tag_github_repos.py
 - Make sure you have `git` installed and available in your PATH.
 
 ## OpenAI API Cost Warning
-- **Be very careful about your spend by selcting the correct model!** Each repo analysis sends code to OpenAI, which can add up quickly in API costs. Monitor your usage and set limits as needed. I wasted money testing by using an expensive model.
+- **Be very careful about your spend by selecting the correct model!** Each repo analysis sends code to OpenAI, which can add up quickly in API costs. Monitor your usage and set limits as needed. I wasted money testing by using an expensive model.
 - You can check your OpenAI usage and billing at: [OpenAI Billing Overview](https://platform.openai.com/settings/organization/billing/overview)
 
 ## Security

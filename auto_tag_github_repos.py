@@ -7,6 +7,7 @@ from typing import List
 from dotenv import load_dotenv
 from openai import OpenAI
 import re
+import argparse
 
 GITHUB_API = "https://api.github.com"
 
@@ -113,7 +114,19 @@ def update_repo_topics(owner: str, repo: str, topics: List[str]):
     r.raise_for_status()
     print(f"Updated topics for {owner}/{repo}: {topics}")
 
+def get_repo_topics(owner: str, repo: str) -> list:
+    url = f"{GITHUB_API}/repos/{owner}/{repo}/topics"
+    topic_headers = {**HEADERS, "Accept": "application/vnd.github+json"}
+    r = requests.get(url, headers=topic_headers)
+    r.raise_for_status()
+    return r.json().get("names", [])
+
 def main():
+    parser = argparse.ArgumentParser(description="Auto-tag GitHub repos with OpenAI.")
+    parser.add_argument("--only-public", action="store_true", help="Only process public repositories.")
+    parser.add_argument("--only-untagged", action="store_true", help="Only process repositories with no topics.")
+    args = parser.parse_args()
+
     ensure_command("git")
     repos = list_repos(GITHUB_USERNAME)
     print(f"Found {len(repos)} repos.")
@@ -123,6 +136,18 @@ def main():
         if repo.get('fork'):
             print(f" → Skipping forked repo: {name}")
             continue
+        if args.only_public and repo.get('private', False):
+            print(f" → Skipping private repo (only-public): {name}")
+            continue
+        if args.only_untagged:
+            try:
+                topics = get_repo_topics(GITHUB_USERNAME, name)
+            except requests.HTTPError as e:
+                print(f" → Error fetching topics for {name}: {e}")
+                continue
+            if topics:
+                print(f" → Skipping repo with topics (only-untagged): {name}")
+                continue
         print(f"\nProcessing {name}...")
         with tempfile.TemporaryDirectory() as tmpdir:
             try:
